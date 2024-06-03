@@ -8,12 +8,18 @@ html = requests.get('https://pitergsm.ru/catalog/audio/naushniki/samsung/13510/'
 
 soup = LxmlSoup(html)  # создаём экземпляр класса LxmlSoup
 
-last_price = 0
 price_pattern = re.compile(r'[\d., \s]+')
 for p in soup.find_all("span", class_="main-detail-price"):
     price = price_pattern.search(p.text()).group()
-    print(last_price)
-    last_price = price
+
+if 'prices' not in globals():
+    globals()['prices'] = {}
+
+product_name = 'Наушники Samsung'
+prices[product_name] = {
+    'old_price': None,
+    'new_price': price
+}
 
 def send_price_email(price):
     # Отправка электронного письма
@@ -21,7 +27,7 @@ def send_price_email(price):
     receiver_email = 'angelina.r.doronina@gmail.com'
     password = 'password'
 
-    message = f"Цена наушников Samsung: {price}"
+    message = f"Старая цена наушников Samsung: {prices[product_name]['old_price']}\nНовая цена наушников Samsung: {price}"
 
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.ehlo()
@@ -29,5 +35,7 @@ def send_price_email(price):
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, message)
 
-print(price)
+
+print(f"Старая цена наушников Samsung: {prices[product_name]['old_price']}\nНовая цена наушников Samsung: {price}")
+
 send_price_email(price)
